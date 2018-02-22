@@ -104,17 +104,17 @@ func Parse(b []byte) (*M3UData, error){
 }
 
 func cleanName(name string) (prefix, newname string){
+
+    replacer := strings.NewReplacer("FHD", "", "HD", "")
+    newname = name
+
     if strings.Contains(name, ":"){
         elems := strings.Split(name, ":")
         prefix = elems[0]
         newname = elems[1]
-        //noprefix = strings.Join(strings.Split(name, ":")[1:], " ")
-    }else{
-        newname = name
     }
-    newname = strings.Replace(newname, "FHD", "", -1)
-    newname = strings.Replace(newname, "HD", "", -1)
-    //fmt.Println("name", name, "prefix", newname, "newname", newname)
+
+    newname = replacer.Replace(name)
     return strings.Trim(prefix, " "), strings.Trim(newname, " ")
 }
 
