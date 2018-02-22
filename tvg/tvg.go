@@ -114,7 +114,7 @@ func cleanName(name string) (prefix, newname string){
         newname = elems[1]
     }
 
-    newname = replacer.Replace(name)
+    newname = replacer.Replace(newname)
     return strings.Trim(prefix, " "), strings.Trim(newname, " ")
 }
 
