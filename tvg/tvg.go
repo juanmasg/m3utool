@@ -5,6 +5,8 @@ import (
     "regexp"
     "strings"
     "bytes"
+    "strconv"
+    "fmt"
 )
 
 type URL struct{
@@ -24,6 +26,46 @@ func (u *URL) Set(s string) (err error){
 type M3UData struct{
     List []*EXTINF
 }
+
+func (m3u *M3UData) AsMapByNumber() map[int]*EXTINF{
+    m := make(map[int]*EXTINF)
+
+    for _, inf := range m3u.List{
+        m[inf.Number] = inf
+    }
+
+    return m
+}
+
+func (m3u *M3UData) AsMapByName() map[string]*EXTINF{
+    m := make(map[string]*EXTINF)
+
+    for _, inf := range m3u.List{
+        m[inf.NewName] = inf
+    }
+
+    return m
+}
+
+func (m3u *M3UData) Print(){
+    for _, inf := range m3u.List{
+        if inf == nil{
+            continue
+        }
+        suffix, prefix := "", ""
+        if inf.HD{ suffix = " HD"}
+        if inf.FHD{ suffix = " FHD"}
+        if inf.Prefix != ""{ prefix = inf.Prefix + ": " }
+
+        name := prefix + inf.NewName + suffix
+
+        //fmt.Printf("#EXTINF:-1 tvg-chno=\"%d\" tvg-id=\"%s\" tvg-name=\"%s\" tvg-logo=\"%s\" group-title=\"%s\", %s \n%s\n",
+        //    inf.Number, inf.Id, name, inf.Logo, inf.Group, name, inf.Url)
+        fmt.Printf("#EXTINF:-1 tvg-chno=\"%d\" tvg-id=\"%s\" tvg-name=\"%s\" tvg-logo=\"%s\" group-title=\"%s\", %s \n%s\n",
+            inf.Number, inf.Id, name, "", inf.Group, name, inf.Url)
+    }
+}
+
 
 type EXTINF struct{
     Id          string  `extinf:"tvg-id"`
@@ -84,6 +126,8 @@ func Parse(b []byte) (*M3UData, error){
                 obj.Name = value
             }else if key == "tvg-logo"{
                 obj.Logo = value
+            }else if key == "tvg-chno"{
+                obj.Number, _ = strconv.Atoi(value)
             }else if key == "group-title"{
                 obj.Group = value
             }
@@ -115,6 +159,7 @@ func cleanName(name string) (prefix, newname string){
     }
 
     newname = replacer.Replace(newname)
+    newname = strings.Title(strings.ToLower(newname))
     return strings.Trim(prefix, " "), strings.Trim(newname, " ")
 }
 
