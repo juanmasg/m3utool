@@ -80,6 +80,7 @@ type EXTINF struct{
     FHD         bool
     Prefix      string
     NewName     string
+    MatchName   string
 }
 
 func Parse(b []byte) (*M3UData, error){
@@ -142,6 +143,8 @@ func Parse(b []byte) (*M3UData, error){
         }
 
         obj.Prefix, obj.NewName = cleanName(obj.Name)
+        obj.MatchName = strings.Replace(strings.ToLower(obj.NewName), " ", "", -1)
+        fmt.Println("NAME", obj.Name, "NEW", obj.NewName, "MATCH", obj.MatchName)
     }
 
     return &M3UData{list}, nil
@@ -149,16 +152,19 @@ func Parse(b []byte) (*M3UData, error){
 
 func cleanName(name string) (prefix, newname string){
 
-    replacer := strings.NewReplacer("FHD", "", "HD", "")
+    re := regexp.MustCompile(` ?F?HD`)
+
+    //replacer := strings.NewReplacer(" FHD", "", " HD", "")
     newname = name
 
     if strings.Contains(name, ":"){
         elems := strings.Split(name, ":")
         prefix = elems[0]
         newname = elems[1]
+        newname = strings.Replace(newname, "  ", " ", -1)
     }
 
-    newname = replacer.Replace(newname)
+    newname = re.ReplaceAllString(newname, "") //replacer.Replace(newname)
     newname = strings.Title(strings.ToLower(newname))
     return strings.Trim(prefix, " "), strings.Trim(newname, " ")
 }
