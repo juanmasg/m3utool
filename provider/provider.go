@@ -16,16 +16,33 @@ func groupById(include_groups map[string]bool, m3u *tvg.M3UData) (groups map[str
             continue
         }
 
-        // Remove SD/HD/FHD duplicates
+        // Set Id if empty
         if obj.Id == ""{
             obj.Id = strings.Replace(obj.Title, " ", "", -1)
-            //fmt.Println("New ID for", obj.Title, obj.Id)
         }
         _, exists := groups[obj.Id]; if !exists{
             groups[obj.Id] = make([]*tvg.EXTINF, 0)
         }
 
         groups[obj.Id] = append(groups[obj.Id], obj)
+    }
+
+    return
+}
+
+func groupByMatchName(include_groups map[string]bool, m3u *tvg.M3UData) (groups map[string][]*tvg.EXTINF){
+    groups = make(map[string][]*tvg.EXTINF)
+
+    for _, obj := range m3u.List{
+        _, include := include_groups[obj.Group]; if !include{
+            continue
+        }
+
+        _, exists := groups[obj.MatchName]; if !exists{
+            groups[obj.MatchName] = make([]*tvg.EXTINF, 0)
+        }
+
+        groups[obj.MatchName] = append(groups[obj.MatchName], obj)
     }
 
     return
@@ -52,7 +69,6 @@ func chooseBestQuality(groups map[string][]*tvg.EXTINF) (m3u *tvg.M3UData){
                 idxq = "SD"
             }
         }
-
         m3u.List = append(m3u.List, l[idx])
     }
 
@@ -95,7 +111,7 @@ func Filter(m3u *tvg.M3UData,
   group_prefix map[string]string,
   prefix_prio map[string]string) *tvg.M3UData{
 
-    groups := groupById(include_groups, m3u)
+    groups := groupByMatchName(include_groups, m3u)
     newm3u := chooseBestQuality(groups)
     sortByPrefix(prefix_prio, newm3u)
 
